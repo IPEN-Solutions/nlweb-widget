@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "test-all",
+      "type": "shell",
+      "command": "uv run pytest",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-unit",
+      "type": "shell",
+      "command": "uv run pytest tests/unit",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-integration",
+      "type": "shell",
+      "command": "uv run pytest tests/integration",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-packaging",
+      "type": "shell",
+      "command": "uv run pytest tests/packaging",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-optional-haystack-memory",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k haystack",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-optional-qdrant-edge",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k qdrant_edge",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-optional-qdrant-server",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k 'qdrant and not qdrant_edge'",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-optional-postgres-pgvector",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k postgres",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "test-optional-neo4j",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k neo4j",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "build-package",
+      "type": "shell",
+      "command": "uv build",
+      "problemMatcher": [
+        "$python"
+      ]
+    },
+    {
+      "label": "Provider: sqlite \u2014 test",
+      "type": "shell",
+      "command": "uv run pytest tests/unit/test_optional_stores.py -k sqlite",
+      "problemMatcher": [
+        "$python"
+      ]
+    }
+  ]
+}

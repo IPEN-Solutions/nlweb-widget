@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+dist/
+build/
+.env
+docs-private/
+governance-artifacts/
+
+.nlweb-sync-state.json
+
+.env.agentic.coding
+.env.agentic.coding.*
+!.env.agentic.coding.example

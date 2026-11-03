@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current test file",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}",
+        "-q"
+      ]
+    },
+    {
+      "name": "Python: Package tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests",
+        "-q"
+      ]
+    },
+    {
+      "name": "Python: SQLite provider test",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests/unit/test_optional_stores.py",
+        "-k",
+        "sqlite",
+        "-q"
+      ]
+    }
+  ]
+}
