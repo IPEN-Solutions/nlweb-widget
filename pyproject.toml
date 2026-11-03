@@ -18,7 +18,7 @@ nlweb-widget = "nlweb_widget.cli:main"
 fastapi = ["fastapi>=0.115,<1"]
 flask = ["flask>=3,<4"]
 django = ["django>=5,<6"]
-starlette = ["starlette>=0.40,<1"]
+starlette = ["starlette>=0.40,<2"]
 sqlite = ["sqlite-vec==0.1.8"]
 postgres = ["sqlalchemy[asyncio]>=2,<3", "asyncpg>=0.29,<1"]
 neo4j = ["neo4j>=5.20,<7"]
@@ -30,7 +30,7 @@ embeddings = ["sentence-transformers>=3.0,<6"]
 semantic = ["haystack-ai>=2.19,<4", "sentence-transformers>=3.0,<6"]
 
 [dependency-groups]
-dev = ["pytest>=8,<9", "pytest-asyncio>=0.23,<1", "anyio>=4.13,<4.14", "httpx>=0.27,<1", "ruff>=0.8,<1", "build>=1.2,<2", "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "flask>=3,<4", "django>=5,<6", "starlette>=0.40,<1"]
+dev = ["pytest>=8,<9", "pytest-asyncio>=0.23,<1", "anyio>=4.13,<4.14", "httpx>=0.27,<1", "ruff>=0.8,<1", "build>=1.2,<2", "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "flask>=3,<4", "django>=5,<6", "starlette>=0.40,<2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nlweb_widget"]
