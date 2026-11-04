@@ -38,6 +38,7 @@ async def test_enabled_widget_projects_and_retrieves() -> None:
     assert widget.effective_state == "enabled"
     assert response.results
 
+
 @pytest.mark.asyncio
 async def test_startup_projects_configured_sources(tmp_path) -> None:
     import json
@@ -45,11 +46,13 @@ async def test_startup_projects_configured_sources(tmp_path) -> None:
     data = tmp_path / "data.json"
     data.write_text(
         json.dumps(
-            [{
-                "@id": "https://example.test/a",
-                "name": "Retail AI",
-                "description": "Retail services",
-            }]
+            [
+                {
+                    "@id": "https://example.test/a",
+                    "name": "Retail AI",
+                    "description": "Retail services",
+                }
+            ]
         ),
         encoding="utf-8",
     )

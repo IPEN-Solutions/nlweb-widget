@@ -1,6 +1,13 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer, field_validator, model_serializer
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_serializer,
+)
 
 
 class ContentDocument(BaseModel):
@@ -45,7 +52,10 @@ class NLWebRequest(BaseModel):
                         "site": "example",
                     },
                     "context": {},
-                    "prefer": {"mode": "list", "response_format": "conversational_search"},
+                    "prefer": {
+                        "mode": "list",
+                        "response_format": "conversational_search",
+                    },
                     "meta": {"version": "0.55"},
                 }
             ]
@@ -103,7 +113,9 @@ class SearchResult(BaseModel):
             item["grounding"] = self.grounding
         # Explicit result-level extension fields are retained, but internal
         # retrieval controls (site/score) are never emitted as domain fields.
-        for key, value in self.__pydantic_extra__.items() if self.__pydantic_extra__ else ():
+        for key, value in (
+            self.__pydantic_extra__.items() if self.__pydantic_extra__ else ()
+        ):
             item.setdefault(key, value)
         return item
 
@@ -119,13 +131,26 @@ def _project_schema_record(
     if not records:
         return dict(schema_object)
     selected = next(
-        (record for record in records if url and (record.get("url") == url or record.get("@id") == url)),
+        (
+            record
+            for record in records
+            if url and (record.get("url") == url or record.get("@id") == url)
+        ),
         None,
     )
     if selected is None and name:
-        selected = next((record for record in records if record.get("name") == name or record.get("headline") == name), None)
+        selected = next(
+            (
+                record
+                for record in records
+                if record.get("name") == name or record.get("headline") == name
+            ),
+            None,
+        )
     if selected is None:
-        selected = next((record for record in records if record.get("@type")), records[0])
+        selected = next(
+            (record for record in records if record.get("@type")), records[0]
+        )
     result = dict(selected)
     if "@context" in schema_object:
         result.setdefault("@context", schema_object["@context"])
@@ -160,7 +185,9 @@ class NLWebResponse(BaseModel):
 class DiscoveryDocument(BaseModel):
     protocol: str = "NLWeb"
     specification: str = "https://nlweb.ai/docs/specification"
-    endpoints: dict[str, str] = Field(default_factory=lambda: {"ask": "/ask", "mcp": "/mcp"})
+    endpoints: dict[str, str] = Field(
+        default_factory=lambda: {"ask": "/ask", "mcp": "/mcp"}
+    )
     discovery: str = "/.well-known/nlweb"
     health: str = "/health"
 

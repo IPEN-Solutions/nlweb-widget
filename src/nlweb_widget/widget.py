@@ -44,13 +44,19 @@ class NLWebWidget:
             return
         initialize = getattr(self.store, "initialize", None)
         should_initialize = (
-            self.settings.retrieval_store == "pgvector" and self.settings.postgres_auto_initialize
-        ) or (
-            self.settings.retrieval_store == "neo4j" and self.settings.neo4j_auto_initialize
-        ) or (
-            self.settings.retrieval_store == "qdrant" and self.settings.qdrant_auto_initialize
-        ) or (
-            self.settings.retrieval_store == "qdrant_edge"
+            (
+                self.settings.retrieval_store == "pgvector"
+                and self.settings.postgres_auto_initialize
+            )
+            or (
+                self.settings.retrieval_store == "neo4j"
+                and self.settings.neo4j_auto_initialize
+            )
+            or (
+                self.settings.retrieval_store == "qdrant"
+                and self.settings.qdrant_auto_initialize
+            )
+            or (self.settings.retrieval_store == "qdrant_edge")
         )
         if initialize is not None and should_initialize:
             await initialize()
@@ -117,13 +123,18 @@ class NLWebWidget:
         query_id = str(uuid4())
         query_text = request.query.text.strip()
         if not query_text:
-            return self._failure(query_id, request, "INVALID_QUERY", "query.text must not be empty")
+            return self._failure(
+                query_id, request, "INVALID_QUERY", "query.text must not be empty"
+            )
 
         meta = request.meta or {}
         version = str(meta.get("version") or "0.55")
         if version != "0.55":
             return self._failure(
-                query_id, request, "INVALID_QUERY", f"Unsupported NLWeb version: {version}"
+                query_id,
+                request,
+                "INVALID_QUERY",
+                f"Unsupported NLWeb version: {version}",
             )
 
         prefer = request.prefer or {}
@@ -138,19 +149,29 @@ class NLWebWidget:
         if unsupported_modes:
             unsupported = ", ".join(sorted(unsupported_modes))
             return self._failure(
-                query_id, request, "UNSUPPORTED_MODE", f"Unsupported mode: {unsupported}"
+                query_id,
+                request,
+                "UNSUPPORTED_MODE",
+                f"Unsupported mode: {unsupported}",
             )
         summarize_requested = "summarize" in requested_modes
 
         response_format = prefer.get("response_format") or prefer.get("format")
-        if response_format and response_format not in {"conversational_search", "chatgpt_app"}:
+        if response_format and response_format not in {
+            "conversational_search",
+            "chatgpt_app",
+        }:
             return self._failure(
-                query_id, request, "UNSUPPORTED_FORMAT",
+                query_id,
+                request,
+                "UNSUPPORTED_FORMAT",
                 f"Unsupported response format: {response_format}",
             )
 
         if not self.settings.enabled:
-            return self._failure(query_id, request, "INTERNAL_ERROR", "NLWeb widget is disabled")
+            return self._failure(
+                query_id, request, "INTERNAL_ERROR", "NLWeb widget is disabled"
+            )
 
         try:
             matches = await self.store.search(query_text, site=request.query.site)
@@ -187,11 +208,11 @@ class NLWebWidget:
                 for document, score in matches
             ]
         except ValueError as exc:
-            return self._failure(
-                query_id, request, "INVALID_SOURCE_METADATA", str(exc)
-            )
+            return self._failure(query_id, request, "INVALID_SOURCE_METADATA", str(exc))
         if not results:
-            return self._failure(query_id, request, "NO_RESULTS", "No matching results were found")
+            return self._failure(
+                query_id, request, "NO_RESULTS", "No matching results were found"
+            )
 
         summary_text = None
         if summarize_requested:
@@ -201,10 +222,14 @@ class NLWebWidget:
                 if (result.description or result.name or "").strip()
             )[:2000]
             if not summary_text:
-                summary_text = f"Found {len(results)} matching result(s) for: {query_text}"
+                summary_text = (
+                    f"Found {len(results)} matching result(s) for: {query_text}"
+                )
             # NLWeb conversational-search summaries are result items. Do not
             # replace the results-stream item with a top-level `summary` field.
-            results.insert(0, SearchResult(schema_type="SearchSummary", text=summary_text))
+            results.insert(
+                0, SearchResult(schema_type="SearchSummary", text=summary_text)
+            )
 
         response_meta: dict[str, Any] = {
             "version": version,
@@ -225,8 +250,14 @@ class NLWebWidget:
             meta=response_meta,
         )
         if response_format == "chatgpt_app":
-            structured = [_structured_result(result) for result in results if result.schema_type != "SearchSummary"]
-            text = summary_text or " ".join(result.description or result.name or "" for result in results[:3])
+            structured = [
+                _structured_result(result)
+                for result in results
+                if result.schema_type != "SearchSummary"
+            ]
+            text = summary_text or " ".join(
+                result.description or result.name or "" for result in results[:3]
+            )
             response.content = [{"type": "text", "text": text}]
             response.structured_data = structured
         return response
@@ -247,7 +278,6 @@ class NLWebWidget:
             error={"code": code, "message": message},
         )
 
-
     def discovery(self) -> dict[str, object]:
         return {
             "protocol": "NLWeb",
@@ -260,6 +290,7 @@ class NLWebWidget:
 
     def _build_default_embedder(self) -> Any:
         from .embeddings import SentenceTransformersEmbeddingProvider
+
         return SentenceTransformersEmbeddingProvider(
             self.settings.embedding_model,
             query_prefix=self.settings.embedding_query_prefix,
@@ -273,13 +304,17 @@ class NLWebWidget:
             return MemoryRetrievalStore()
         if selection in {"haystack", "haystack-memory"}:
             from .content.haystack import HaystackInMemoryRetrievalStore
+
             provider = embedding_provider or self._build_default_embedder()
             return HaystackInMemoryRetrievalStore(provider)
         if selection == "custom":
-            raise ValueError("retrieval_store=custom requires an explicit store argument")
+            raise ValueError(
+                "retrieval_store=custom requires an explicit store argument"
+            )
         embedding_provider = embedding_provider or self._build_default_embedder()
         if selection == "qdrant":
             from .content.qdrant import QdrantRetrievalStore
+
             return QdrantRetrievalStore(
                 self.settings.qdrant_url or "",
                 embedding_provider,
@@ -289,6 +324,7 @@ class NLWebWidget:
             )
         if selection == "qdrant_edge":
             from .content.qdrant_edge import QdrantEdgeRetrievalStore
+
             return QdrantEdgeRetrievalStore(
                 self.settings.qdrant_edge_path,
                 embedding_provider,
@@ -296,6 +332,7 @@ class NLWebWidget:
             )
         if selection == "sqlite":
             from .content.sqlite import SQLiteVecRetrievalStore
+
             return SQLiteVecRetrievalStore(
                 self.settings.sqlite_path,
                 embedding_provider,
@@ -321,15 +358,33 @@ class NLWebWidget:
             dimensions=self.settings.neo4j_vector_dimensions,
             vector_index=self.settings.neo4j_vector_index,
         )
+
+
 def _grounding_for_document(document: ContentDocument) -> dict[str, Any] | None:
-    metadata_grounding = document.metadata.get("grounding") if isinstance(document.metadata, dict) else None
-    source_grounding = document.schema_object.get("grounding") if isinstance(document.schema_object, dict) else None
+    metadata_grounding = (
+        document.metadata.get("grounding")
+        if isinstance(document.metadata, dict)
+        else None
+    )
+    source_grounding = (
+        document.schema_object.get("grounding")
+        if isinstance(document.schema_object, dict)
+        else None
+    )
     if metadata_grounding is not None and not isinstance(metadata_grounding, dict):
-        raise ValueError(f"Document {document.id!r} grounding metadata must be an object")
+        raise ValueError(
+            f"Document {document.id!r} grounding metadata must be an object"
+        )
     if source_grounding is not None and not isinstance(source_grounding, dict):
         raise ValueError(f"Document {document.id!r} source grounding must be an object")
-    if metadata_grounding is not None and source_grounding is not None and metadata_grounding != source_grounding:
-        raise ValueError(f"Document {document.id!r} has conflicting source and metadata grounding; resolve explicitly")
+    if (
+        metadata_grounding is not None
+        and source_grounding is not None
+        and metadata_grounding != source_grounding
+    ):
+        raise ValueError(
+            f"Document {document.id!r} has conflicting source and metadata grounding; resolve explicitly"
+        )
     if metadata_grounding is not None:
         return metadata_grounding
     return source_grounding
@@ -344,10 +399,20 @@ def _schema_type_for_document(document: ContentDocument) -> str | None:
         for record in graph:
             if not isinstance(record, dict):
                 continue
-            if (record.get("url") == str(document.url) or record.get("@id") == str(document.url)) and record.get("@type"):
+            if (
+                record.get("url") == str(document.url)
+                or record.get("@id") == str(document.url)
+            ) and record.get("@type"):
                 return record["@type"]
         for record in graph:
-            if isinstance(record, dict) and (record.get("name") == document.title or record.get("headline") == document.title) and record.get("@type"):
+            if (
+                isinstance(record, dict)
+                and (
+                    record.get("name") == document.title
+                    or record.get("headline") == document.title
+                )
+                and record.get("@type")
+            ):
                 return record["@type"]
         for record in graph:
             if isinstance(record, dict) and record.get("@type"):
@@ -370,7 +435,9 @@ def _structured_result(result: SearchResult) -> dict[str, Any]:
     return base
 
 
-def _document_filter_matches(document: ContentDocument, key: str, expected: Any) -> bool:
+def _document_filter_matches(
+    document: ContentDocument, key: str, expected: Any
+) -> bool:
     """Apply schema.org/domain filters without changing the retrieval contract."""
     if hasattr(document, key):
         actual = getattr(document, key)
@@ -391,4 +458,3 @@ def _document_filter_matches_value(actual: Any, expected: Any) -> bool:
     if isinstance(actual, dict) and isinstance(expected, dict):
         return all(actual.get(key) == value for key, value in expected.items())
     return actual == expected or str(actual).casefold() == str(expected).casefold()
-

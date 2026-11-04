@@ -17,7 +17,13 @@ from .adapters import (
     WebPageSchemaAdapter,
 )
 from .fingerprint import fingerprint_source
-from .models import ContentSource, ContentSourceKind, SourceState, SyncResult, SyncSummary
+from .models import (
+    ContentSource,
+    ContentSourceKind,
+    SourceState,
+    SyncResult,
+    SyncSummary,
+)
 from .state import StateStore
 
 Loader = Callable[[ContentSource], Awaitable[Any] | Any]
@@ -55,7 +61,9 @@ class ContentSyncService:
         self._loaders: dict[ContentSourceKind, Loader] = {}
         self._locks: dict[str, asyncio.Lock] = {}
 
-    def register_adapter(self, kind: ContentSourceKind, adapter: ContentAdapter) -> None:
+    def register_adapter(
+        self, kind: ContentSourceKind, adapter: ContentAdapter
+    ) -> None:
         self._adapters[kind] = adapter
 
     def register_loader(self, kind: ContentSourceKind, loader: Loader) -> None:
@@ -155,7 +163,9 @@ class ContentSyncService:
             async with semaphore:
                 return await self.sync(source, force=force)
 
-        return list(await asyncio.gather(*(run(source) for source in sources if source.enabled)))
+        return list(
+            await asyncio.gather(*(run(source) for source in sources if source.enabled))
+        )
 
     async def sync_summary(
         self, sources: list[ContentSource], *, force: bool = False
@@ -176,7 +186,9 @@ class ContentSyncService:
                 return dict(result)
             adapter = self._adapters.get(source.kind)
             if adapter is None:
-                raise ValueError(f"No content adapter registered for {source.kind.value}")
+                raise ValueError(
+                    f"No content adapter registered for {source.kind.value}"
+                )
             documents = await adapter.read(source)
             if self.target is None:
                 return {
@@ -213,7 +225,7 @@ def load_content_sources(path: str | Path) -> list[ContentSource]:
     if isinstance(payload, dict):
         payload = payload.get("sources")
     if not isinstance(payload, list):
-        raise ValueError(f"Expected a JSON list or {{\"sources\": [...]}} in {path}")
+        raise TypeError(f'Expected a JSON list or {{"sources": [...]}} in {path}')
     sources: list[ContentSource] = []
     for item in payload:
         source = ContentSource.model_validate(item)

@@ -26,4 +26,6 @@ def test_neo4j_requires_connection_fields() -> None:
 
 def test_startup_sync_requires_sync_enabled() -> None:
     with pytest.raises(ValidationError, match="NLWEB_CONTENT_SYNC_ON_STARTUP"):
-        NLWebSettings(_env_file=None, content_sync_enabled=False, content_sync_on_startup=True)
+        NLWebSettings(
+            _env_file=None, content_sync_enabled=False, content_sync_on_startup=True
+        )

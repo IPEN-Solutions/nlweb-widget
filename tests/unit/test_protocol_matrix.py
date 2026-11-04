@@ -57,7 +57,10 @@ async def test_ask_request_matrix_accepts_context_meta_preferences_and_filters(
 async def test_chatgpt_app_response_format_is_additive(widget: NLWebWidget) -> None:
     await widget.index(
         ContentDocument(
-            id="1", url="https://example.test/1", title="One", content="one service",
+            id="1",
+            url="https://example.test/1",
+            title="One",
+            content="one service",
             schema_object={"@type": "Service", "name": "One"},
         )
     )
@@ -73,7 +76,9 @@ async def test_chatgpt_app_response_format_is_additive(widget: NLWebWidget) -> N
 
 
 @pytest.mark.asyncio
-async def test_invalid_protocol_version_is_explicit_failure(widget: NLWebWidget) -> None:
+async def test_invalid_protocol_version_is_explicit_failure(
+    widget: NLWebWidget,
+) -> None:
     response = await widget.ask(
         NLWebRequest(query={"text": "anything"}, meta={"version": "0.54"})
     )
@@ -96,7 +101,9 @@ async def test_mcp_tools_list_is_independent_and_normative(widget: NLWebWidget) 
 
 
 @pytest.mark.asyncio
-async def test_mcp_application_failure_is_tool_error_not_jsonrpc_error(widget: NLWebWidget) -> None:
+async def test_mcp_application_failure_is_tool_error_not_jsonrpc_error(
+    widget: NLWebWidget,
+) -> None:
     response = await protocol_mcp(
         widget,
         {
@@ -108,15 +115,21 @@ async def test_mcp_application_failure_is_tool_error_not_jsonrpc_error(widget: N
     )
     assert "error" not in response
     assert response["result"]["isError"] is True
-    assert response["result"]["structuredContent"]["_meta"]["response_type"] == "failure"
+    assert (
+        response["result"]["structuredContent"]["_meta"]["response_type"] == "failure"
+    )
 
 
 @pytest.mark.asyncio
-async def test_mcp_unknown_tool_and_method_use_jsonrpc_errors(widget: NLWebWidget) -> None:
+async def test_mcp_unknown_tool_and_method_use_jsonrpc_errors(
+    widget: NLWebWidget,
+) -> None:
     unknown_tool = await protocol_mcp(
         widget,
         {
-            "jsonrpc": "2.0", "id": 3, "method": "tools/call",
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
             "params": {"name": "not-a-tool", "arguments": {}},
         },
     )

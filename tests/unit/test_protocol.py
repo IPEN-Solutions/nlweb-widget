@@ -1,8 +1,8 @@
 import pytest
-from nlweb_widget.settings import NLWebSettings
 
 from nlweb_widget import ContentDocument, NLWebRequest, NLWebWidget
 from nlweb_widget.protocol import protocol_mcp
+from nlweb_widget.settings import NLWebSettings
 
 
 @pytest.mark.asyncio

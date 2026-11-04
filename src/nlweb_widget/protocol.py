@@ -26,7 +26,11 @@ async def protocol_ask(widget: NLWebWidget, payload: NLWebRequest) -> dict[str, 
 
 
 def _mcp_error(request_id: int | str | None, code: int, message: str) -> dict[str, Any]:
-    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {"code": code, "message": message},
+    }
 
 
 def _ask_tool() -> dict[str, Any]:
@@ -116,7 +120,9 @@ async def protocol_mcp(
                 "content": [
                     {
                         "type": "text",
-                        "text": result.model_dump_json(by_alias=True, exclude_none=True),
+                        "text": result.model_dump_json(
+                            by_alias=True, exclude_none=True
+                        ),
                     }
                 ],
                 "structuredContent": payload,

@@ -15,13 +15,15 @@ from nlweb_widget import ContentDocument, NLWebWidget
 
 widget = NLWebWidget(domain="https://example.com")
 await widget.startup()
-await widget.index(ContentDocument(
-    id="service-1",
-    url="https://example.com/services/ai",
-    title="AI consulting",
-    content="AI transformation and implementation services.",
-    schema_object={"@type": "Service", "name": "AI consulting"},
-))
+await widget.index(
+    ContentDocument(
+        id="service-1",
+        url="https://example.com/services/ai",
+        title="AI consulting",
+        content="AI transformation and implementation services.",
+        schema_object={"@type": "Service", "name": "AI consulting"},
+    )
+)
 ```
 
 The memory provider is dependency-free and remains the default. The widget is disabled by default until `NLWEB_ENABLED=true` is configured.
@@ -30,6 +32,7 @@ The memory provider is dependency-free and remains the default. The widget is di
 
 ```python
 from nlweb_widget.integrations.fastapi_integration import mount_fastapi_nlweb
+
 mount_fastapi_nlweb(app, widget)
 ```
 

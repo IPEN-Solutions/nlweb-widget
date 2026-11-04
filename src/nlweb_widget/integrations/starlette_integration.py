@@ -8,7 +8,14 @@ def build_starlette_nlweb_routes(widget: Any) -> Iterable[Any]:
     from starlette.routing import Route
 
     from ..models import MCPRequest, NLWebRequest
-    from ..protocol import protocol_ask, protocol_ask_stream, protocol_discovery, protocol_health, protocol_mcp, streaming_requested
+    from ..protocol import (
+        protocol_ask,
+        protocol_ask_stream,
+        protocol_discovery,
+        protocol_health,
+        protocol_mcp,
+        streaming_requested,
+    )
 
     async def ask(request: Any) -> JSONResponse:
         payload = NLWebRequest.model_validate(await request.json())

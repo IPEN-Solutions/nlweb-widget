@@ -21,7 +21,17 @@ class NLWebSettings(BaseSettings):
     prefix: str = "/nlweb"
     public_base_url: str = "http://localhost:8000"
     site: str = "default"
-    retrieval_store: Literal["memory", "haystack", "haystack-memory", "pgvector", "neo4j", "qdrant", "qdrant_edge", "sqlite", "custom"] = "memory"
+    retrieval_store: Literal[
+        "memory",
+        "haystack",
+        "haystack-memory",
+        "pgvector",
+        "neo4j",
+        "qdrant",
+        "qdrant_edge",
+        "sqlite",
+        "custom",
+    ] = "memory"
     postgres_database_url: str | None = None
     pgvector_dimensions: int = Field(default=384, ge=1, le=16_000)
     pgvector_table: str = "nlweb_documents"
@@ -60,11 +70,17 @@ class NLWebSettings(BaseSettings):
                 "NLWEB_RETRIEVAL_STORE=pgvector"
             )
         if self.retrieval_store == "qdrant" and not self.qdrant_url:
-            raise ValueError("NLWEB_QDRANT_URL is required when NLWEB_RETRIEVAL_STORE=qdrant")
+            raise ValueError(
+                "NLWEB_QDRANT_URL is required when NLWEB_RETRIEVAL_STORE=qdrant"
+            )
         if self.retrieval_store == "qdrant_edge" and not self.qdrant_edge_path.strip():
-            raise ValueError("NLWEB_QDRANT_EDGE_PATH is required when NLWEB_RETRIEVAL_STORE=qdrant_edge")
+            raise ValueError(
+                "NLWEB_QDRANT_EDGE_PATH is required when NLWEB_RETRIEVAL_STORE=qdrant_edge"
+            )
         if self.retrieval_store == "sqlite" and not self.sqlite_path.strip():
-            raise ValueError("NLWEB_SQLITE_PATH is required when NLWEB_RETRIEVAL_STORE=sqlite")
+            raise ValueError(
+                "NLWEB_SQLITE_PATH is required when NLWEB_RETRIEVAL_STORE=sqlite"
+            )
         if self.retrieval_store == "neo4j":
             missing = [
                 name
@@ -76,9 +92,7 @@ class NLWebSettings(BaseSettings):
                 if not value
             ]
             if missing:
-                raise ValueError(
-                    "Neo4j retrieval requires: " + ", ".join(missing)
-                )
+                raise ValueError("Neo4j retrieval requires: " + ", ".join(missing))
         if self.content_sync_on_startup and not self.content_sync_enabled:
             raise ValueError(
                 "NLWEB_CONTENT_SYNC_ON_STARTUP requires NLWEB_CONTENT_SYNC_ENABLED=true"

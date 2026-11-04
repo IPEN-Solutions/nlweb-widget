@@ -9,10 +9,13 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from ..errors import OptionalDependencyError, ProviderInitializationError, RetrievalError
+from ..errors import (
+    OptionalDependencyError,
+    ProviderInitializationError,
+    RetrievalError,
+)
 from ..models import ContentDocument
 from .retrieval import EmbeddingProvider, embed_query
-
 
 SQLITE_VEC_VERSION = "0.1.8"
 
@@ -91,28 +94,36 @@ class SQLiteVecRetrievalStore:
                 connection.commit()
                 self._connection = connection
             except ProviderInitializationError:
-                if 'connection' in locals():
+                if "connection" in locals():
                     connection.close()
                 raise
             except (OSError, sqlite3.Error, ValueError) as exc:
-                if 'connection' in locals():
+                if "connection" in locals():
                     connection.close()
                 raise ProviderInitializationError(
                     f"SQLite vector store initialization failed for {self._path}: {exc}"
                 ) from exc
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
-        items = [documents] if isinstance(documents, ContentDocument) else list(documents)
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
+        items = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
         if not items:
             return 0
         await self.initialize()
         vectors = await self._embedder.embed([document.content for document in items])
         if len(vectors) != len(items):
-            raise ValueError("embedding provider returned an incorrect number of vectors")
+            raise ValueError(
+                "embedding provider returned an incorrect number of vectors"
+            )
         await asyncio.to_thread(self._upsert_sync, items, vectors)
         return len(items)
 
-    def _upsert_sync(self, documents: list[ContentDocument], vectors: list[list[float]]) -> None:
+    def _upsert_sync(
+        self, documents: list[ContentDocument], vectors: list[list[float]]
+    ) -> None:
         with self._lock:
             connection = self._require_connection()
             try:
@@ -136,10 +147,18 @@ class SQLiteVecRetrievalStore:
                             """UPDATE nlweb_documents SET url=?, title=?, content=?,
                                schema_object=?, site=?, metadata=? WHERE rowid=?""",
                             (
-                                str(document.url), document.title, document.content,
-                                json.dumps(document.schema_object, ensure_ascii=False, default=str),
+                                str(document.url),
+                                document.title,
+                                document.content,
+                                json.dumps(
+                                    document.schema_object,
+                                    ensure_ascii=False,
+                                    default=str,
+                                ),
                                 document.site or "default",
-                                json.dumps(document.metadata, ensure_ascii=False, default=str),
+                                json.dumps(
+                                    document.metadata, ensure_ascii=False, default=str
+                                ),
                                 rowid,
                             ),
                         )
@@ -149,16 +168,30 @@ class SQLiteVecRetrievalStore:
                                (document_id,url,title,content,schema_object,site,metadata)
                                VALUES (?,?,?,?,?,?,?)""",
                             (
-                                document.id, str(document.url), document.title, document.content,
-                                json.dumps(document.schema_object, ensure_ascii=False, default=str),
+                                document.id,
+                                str(document.url),
+                                document.title,
+                                document.content,
+                                json.dumps(
+                                    document.schema_object,
+                                    ensure_ascii=False,
+                                    default=str,
+                                ),
                                 document.site or "default",
-                                json.dumps(document.metadata, ensure_ascii=False, default=str),
+                                json.dumps(
+                                    document.metadata, ensure_ascii=False, default=str
+                                ),
                             ),
                         )
                         rowid = int(cursor.lastrowid)
                     connection.execute(
                         "INSERT INTO nlweb_documents_fts(document_id,title,content,site) VALUES (?,?,?,?)",
-                        (document.id, document.title, document.content, document.site or "default"),
+                        (
+                            document.id,
+                            document.title,
+                            document.content,
+                            document.site or "default",
+                        ),
                     )
                     connection.execute(
                         "INSERT INTO nlweb_document_vectors(document_rowid,embedding) VALUES (?,?)",
@@ -185,9 +218,17 @@ class SQLiteVecRetrievalStore:
                     ids,
                 ).fetchall()
                 for rowid, document_id in rows:
-                    connection.execute("DELETE FROM nlweb_document_vectors WHERE document_rowid = ?", (rowid,))
-                    connection.execute("DELETE FROM nlweb_documents_fts WHERE document_id = ?", (document_id,))
-                    connection.execute("DELETE FROM nlweb_documents WHERE rowid = ?", (rowid,))
+                    connection.execute(
+                        "DELETE FROM nlweb_document_vectors WHERE document_rowid = ?",
+                        (rowid,),
+                    )
+                    connection.execute(
+                        "DELETE FROM nlweb_documents_fts WHERE document_id = ?",
+                        (document_id,),
+                    )
+                    connection.execute(
+                        "DELETE FROM nlweb_documents WHERE rowid = ?", (rowid,)
+                    )
                 connection.commit()
                 return len(rows)
             except sqlite3.Error as exc:
@@ -204,7 +245,9 @@ class SQLiteVecRetrievalStore:
         await self.initialize()
         vector = await embed_query(self._embedder, query)
         _validate_vector(vector, self._dimensions, "query")
-        return await asyncio.to_thread(self._search_sync, query, vector, max(1, limit), site)
+        return await asyncio.to_thread(
+            self._search_sync, query, vector, max(1, limit), site
+        )
 
     def _search_sync(
         self,
@@ -224,7 +267,9 @@ class SQLiteVecRetrievalStore:
                 vector_rows = connection.execute(
                     vector_sql, (_serialize_f32(vector), candidates)
                 ).fetchall()
-                vector_rank = {int(row[0]): index + 1 for index, row in enumerate(vector_rows)}
+                vector_rank = {
+                    int(row[0]): index + 1 for index, row in enumerate(vector_rows)
+                }
 
                 terms = _fts_terms(query)
                 fts_rank: dict[str, int] = {}
@@ -240,7 +285,9 @@ class SQLiteVecRetrievalStore:
                     fts_sql += " ORDER BY bm25(nlweb_documents_fts) LIMIT ?"
                     params.append(candidates)
                     fts_rows = connection.execute(fts_sql, params).fetchall()
-                    fts_rank = {str(row[0]): index + 1 for index, row in enumerate(fts_rows)}
+                    fts_rank = {
+                        str(row[0]): index + 1 for index, row in enumerate(fts_rows)
+                    }
 
                 rowids = set(vector_rank)
                 if fts_rank:
@@ -267,7 +314,9 @@ class SQLiteVecRetrievalStore:
                 for row in rows:
                     rowid = int(row[0])
                     document_id = str(row[1])
-                    score = _rrf_score(vector_rank.get(rowid), fts_rank.get(document_id))
+                    score = _rrf_score(
+                        vector_rank.get(rowid), fts_rank.get(document_id)
+                    )
                     ranked.append((_row_to_document(row), score))
                 ranked.sort(key=lambda item: item[1], reverse=True)
                 return ranked[:limit]
@@ -283,7 +332,11 @@ class SQLiteVecRetrievalStore:
             connection = self._require_connection()
             try:
                 version = str(connection.execute("SELECT vec_version()").fetchone()[0])
-                count = int(connection.execute("SELECT COUNT(*) FROM nlweb_documents").fetchone()[0])
+                count = int(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM nlweb_documents"
+                    ).fetchone()[0]
+                )
                 return {
                     "backend": "sqlite+sqlite-vec",
                     "path": self._path,
@@ -293,7 +346,9 @@ class SQLiteVecRetrievalStore:
                     "status": "ok",
                 }
             except sqlite3.Error as exc:
-                raise RetrievalError(f"SQLite vector health check failed: {exc}") from exc
+                raise RetrievalError(
+                    f"SQLite vector health check failed: {exc}"
+                ) from exc
 
     async def close(self) -> None:
         await asyncio.to_thread(self._close_sync)

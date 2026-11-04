@@ -16,10 +16,14 @@ class HaystackInMemoryRetrievalStore:
     def __init__(self, embedding_provider: EmbeddingProvider) -> None:
         try:
             from haystack import Document
+            from haystack.components.retrievers.in_memory import (
+                InMemoryEmbeddingRetriever,
+            )
             from haystack.document_stores.in_memory import InMemoryDocumentStore
-            from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
         except ImportError as exc:
-            raise RuntimeError("Haystack support requires the 'haystack' extra") from exc
+            raise RuntimeError(
+                "Haystack support requires the 'haystack' extra"
+            ) from exc
         self._Document = Document
         self._store = InMemoryDocumentStore(embedding_similarity_function="cosine")
         self._retriever = InMemoryEmbeddingRetriever(self._store)
@@ -28,8 +32,12 @@ class HaystackInMemoryRetrievalStore:
     async def initialize(self) -> None:
         return None
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
-        items = [documents] if isinstance(documents, ContentDocument) else list(documents)
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
+        items = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
         vectors = await self._embedder.embed([document.content for document in items])
         haystack_documents = [
             self._Document(
@@ -50,7 +58,12 @@ class HaystackInMemoryRetrievalStore:
         return len(items)
 
     async def delete(self, ids: Sequence[str]) -> int:
-        existing = [item.id for item in self._store.filter_documents({"field": "id", "operator": "in", "value": list(ids)})]
+        existing = [
+            item.id
+            for item in self._store.filter_documents(
+                {"field": "id", "operator": "in", "value": list(ids)}
+            )
+        ]
         if existing:
             self._store.delete_documents(existing)
         return len(existing)
@@ -66,7 +79,9 @@ class HaystackInMemoryRetrievalStore:
         filters: dict[str, Any] | None = None
         if site:
             filters = {"field": "meta.site", "operator": "==", "value": site}
-        result = self._retriever.run(query_embedding=vector, top_k=limit, filters=filters)
+        result = self._retriever.run(
+            query_embedding=vector, top_k=limit, filters=filters
+        )
         return [
             (
                 ContentDocument(

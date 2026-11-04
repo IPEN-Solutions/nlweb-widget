@@ -4,7 +4,11 @@ from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from ..errors import OptionalDependencyError, ProviderInitializationError, RetrievalError
+from ..errors import (
+    OptionalDependencyError,
+    ProviderInitializationError,
+    RetrievalError,
+)
 from ..models import ContentDocument
 from .retrieval import EmbeddingProvider, embed_query
 
@@ -29,7 +33,9 @@ class QdrantEdgeRetrievalStore:
         try:
             from qdrant_edge import Distance, EdgeConfig, EdgeShard, EdgeVectorParams
         except ImportError as exc:
-            raise OptionalDependencyError("Qdrant Edge support requires the 'qdrant-edge' extra") from exc
+            raise OptionalDependencyError(
+                "Qdrant Edge support requires the 'qdrant-edge' extra"
+            ) from exc
         self._embedding_provider = embedding_provider
         self._path = str(Path(path))
         self._dimensions = dimensions
@@ -71,12 +77,18 @@ class QdrantEdgeRetrievalStore:
                 f"Qdrant Edge shard creation failed for {self._path}: {exc}"
             ) from exc
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
-        items = [documents] if isinstance(documents, ContentDocument) else list(documents)
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
+        items = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
         if not items:
             return 0
         await self.initialize()
-        vectors = await self._embedding_provider.embed([document.content for document in items])
+        vectors = await self._embedding_provider.embed(
+            [document.content for document in items]
+        )
         from qdrant_edge import Point, UpdateOperation
 
         points = [
@@ -96,9 +108,13 @@ class QdrantEdgeRetrievalStore:
             for document, vector in zip(items, vectors, strict=True)
         ]
         try:
-            await asyncio.to_thread(self._shard.update, UpdateOperation.upsert_points(points))
+            await asyncio.to_thread(
+                self._shard.update, UpdateOperation.upsert_points(points)
+            )
         except Exception as exc:
-            raise RetrievalError(f"Qdrant Edge upsert failed for {len(items)} document(s): {exc}") from exc
+            raise RetrievalError(
+                f"Qdrant Edge upsert failed for {len(items)} document(s): {exc}"
+            ) from exc
         return len(items)
 
     async def delete(self, ids: Sequence[str]) -> int:
@@ -116,7 +132,9 @@ class QdrantEdgeRetrievalStore:
                 UpdateOperation.delete_points(point_ids),
             )
         except Exception as exc:
-            raise RetrievalError(f"Qdrant Edge delete failed for {len(ids)} document(s): {exc}") from exc
+            raise RetrievalError(
+                f"Qdrant Edge delete failed for {len(ids)} document(s): {exc}"
+            ) from exc
         return len(ids)
 
     async def search(
@@ -127,7 +145,7 @@ class QdrantEdgeRetrievalStore:
         site: str | None = None,
     ) -> list[tuple[ContentDocument, float]]:
         await self.initialize()
-        from qdrant_edge import Filter, FieldCondition, MatchValue, Query, QueryRequest
+        from qdrant_edge import FieldCondition, Filter, MatchValue, Query, QueryRequest
 
         vector = await embed_query(self._embedding_provider, query)
         query_filter = None
@@ -145,7 +163,9 @@ class QdrantEdgeRetrievalStore:
         try:
             results = await asyncio.to_thread(self._shard.query, request)
         except Exception as exc:
-            raise RetrievalError(f"Qdrant Edge search failed for query {query!r}: {exc}") from exc
+            raise RetrievalError(
+                f"Qdrant Edge search failed for query {query!r}: {exc}"
+            ) from exc
         return [_edge_result_to_match(item) for item in results]
 
     async def health(self) -> dict[str, object]:
@@ -173,10 +193,10 @@ def _edge_result_to_match(item: Any) -> tuple[ContentDocument, float]:
         float(getattr(item, "score", 0.0)),
     )
 
+
 def _point_id(document_id: str) -> str:
     """Map arbitrary ContentDocument ids to Qdrant Edge's UUID point contract."""
     try:
         return str(UUID(document_id))
     except ValueError:
         return str(uuid5(NAMESPACE_URL, f"nlweb-widget:qdrant-edge:{document_id}"))
-

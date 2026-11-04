@@ -2,7 +2,6 @@ import json
 
 import pytest
 
-from nlweb_widget import ContentDocument
 from nlweb_widget.content import ContentSource, ContentSourceKind, ContentSyncService
 from nlweb_widget.content.adapters import SchemaJSONAdapter
 from nlweb_widget.content.state import StateStore

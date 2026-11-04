@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from ..models import ContentDocument
-from .retrieval import EmbeddingProvider, embed_query, RetrievalProvider
+from .retrieval import EmbeddingProvider, embed_query
 
 
 class PgVectorStore:
@@ -20,7 +20,9 @@ class PgVectorStore:
         try:
             from sqlalchemy.ext.asyncio import create_async_engine
         except ImportError as exc:
-            raise RuntimeError("PostgreSQL support requires the 'postgres' extra") from exc
+            raise RuntimeError(
+                "PostgreSQL support requires the 'postgres' extra"
+            ) from exc
         self._table = _safe_identifier(table)
         self._dimensions = dimensions
         self._embedder = embedding_provider
@@ -53,13 +55,21 @@ class PgVectorStore:
                 )
             )
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
         from sqlalchemy import text
 
-        documents = [documents] if isinstance(documents, ContentDocument) else list(documents)
-        vectors = await self._embedder.embed([document.content for document in documents])
+        documents = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
+        vectors = await self._embedder.embed(
+            [document.content for document in documents]
+        )
         if len(vectors) != len(documents):
-            raise ValueError("embedding provider returned an incorrect number of vectors")
+            raise ValueError(
+                "embedding provider returned an incorrect number of vectors"
+            )
         statement = text(
             f"""INSERT INTO {self._table}
             (id,url,title,content,schema_object,site,metadata,embedding,updated_at)
@@ -79,9 +89,13 @@ class PgVectorStore:
                         "url": str(document.url),
                         "title": document.title,
                         "content": document.content,
-                        "schema_object": json.dumps(document.schema_object, ensure_ascii=False),
+                        "schema_object": json.dumps(
+                            document.schema_object, ensure_ascii=False
+                        ),
                         "site": document.site or "default",
-                        "metadata": json.dumps(document.metadata, ensure_ascii=False, default=str),
+                        "metadata": json.dumps(
+                            document.metadata, ensure_ascii=False, default=str
+                        ),
                         "embedding": _vector(vector),
                     },
                 )

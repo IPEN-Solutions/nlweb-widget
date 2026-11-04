@@ -20,7 +20,11 @@ def test_load_content_sources_from_object(tmp_path) -> None:
     path = tmp_path / "sources.json"
     path.write_text(
         json.dumps(
-            {"sources": [{"name": "domain", "kind": "schema_json", "location": "data.json"}]}
+            {
+                "sources": [
+                    {"name": "domain", "kind": "schema_json", "location": "data.json"}
+                ]
+            }
         ),
         encoding="utf-8",
     )

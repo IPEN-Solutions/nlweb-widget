@@ -12,7 +12,9 @@ def enabled_widget() -> NLWebWidget:
 @pytest.mark.asyncio
 async def test_answer_declares_response_type(enabled_widget: NLWebWidget) -> None:
     await enabled_widget.index(
-        ContentDocument(id="1", url="https://example.test/1", title="One", content="one service")
+        ContentDocument(
+            id="1", url="https://example.test/1", title="One", content="one service"
+        )
     )
     response = await enabled_widget.ask(NLWebRequest(query={"text": "one"}))
     assert response.meta["response_type"] == "answer"
@@ -22,7 +24,9 @@ async def test_answer_declares_response_type(enabled_widget: NLWebWidget) -> Non
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["generate", "unsupported"])
-async def test_unsupported_mode_is_failure(enabled_widget: NLWebWidget, mode: str) -> None:
+async def test_unsupported_mode_is_failure(
+    enabled_widget: NLWebWidget, mode: str
+) -> None:
     response = await enabled_widget.ask(
         NLWebRequest(query={"text": "one"}, prefer={"mode": mode})
     )
@@ -123,12 +127,16 @@ async def test_grounding_survives_to_ask_result_without_rewriting(
     )
     from nlweb_widget.protocol import protocol_ask
 
-    payload = await protocol_ask(enabled_widget, NLWebRequest(query={"text": "evidence report"}))
+    payload = await protocol_ask(
+        enabled_widget, NLWebRequest(query={"text": "evidence report"})
+    )
     assert payload["results"][0]["grounding"] == grounding
 
 
 @pytest.mark.asyncio
-async def test_grounding_survives_in_mcp_structured_content(enabled_widget: NLWebWidget) -> None:
+async def test_grounding_survives_in_mcp_structured_content(
+    enabled_widget: NLWebWidget,
+) -> None:
     grounding = {"source": "https://example.test/evidence", "proof": {"ref": "abc"}}
     await enabled_widget.index(
         ContentDocument(
@@ -168,15 +176,25 @@ async def test_jsonld_graph_primary_entity_is_projected_as_typed_result(
             schema_object={
                 "@context": "https://schema.org",
                 "@graph": [
-                    {"@type": "Organization", "@id": "https://example.test/#org", "name": "Example"},
-                    {"@type": "Service", "url": "https://example.test/services/ai", "name": "AI Service"},
+                    {
+                        "@type": "Organization",
+                        "@id": "https://example.test/#org",
+                        "name": "Example",
+                    },
+                    {
+                        "@type": "Service",
+                        "url": "https://example.test/services/ai",
+                        "name": "AI Service",
+                    },
                 ],
             },
         )
     )
     from nlweb_widget.protocol import protocol_ask
 
-    payload = await protocol_ask(enabled_widget, NLWebRequest(query={"text": "graph-backed service"}))
+    payload = await protocol_ask(
+        enabled_widget, NLWebRequest(query={"text": "graph-backed service"})
+    )
     result = payload["results"][0]
     assert result["@type"] == "Service"
     assert result["name"] == "AI Service"
@@ -194,11 +212,16 @@ async def test_conflicting_source_and_metadata_grounding_is_reported_explicitly(
             url="https://example.test/conflict",
             title="Grounding conflict",
             content="Grounding conflict test record.",
-            schema_object={"@type": "Article", "grounding": {"source": "https://one.example/"}},
+            schema_object={
+                "@type": "Article",
+                "grounding": {"source": "https://one.example/"},
+            },
             metadata={"grounding": {"source": "https://two.example/"}},
         )
     )
-    response = await enabled_widget.ask(NLWebRequest(query={"text": "grounding conflict"}))
+    response = await enabled_widget.ask(
+        NLWebRequest(query={"text": "grounding conflict"})
+    )
     assert response.meta["response_type"] == "failure"
     assert response.error is not None
     assert response.error.code == "INVALID_SOURCE_METADATA"
@@ -206,20 +229,34 @@ async def test_conflicting_source_and_metadata_grounding_is_reported_explicitly(
 
 
 @pytest.mark.asyncio
-async def test_streaming_protocol_emits_start_results_and_complete(enabled_widget: NLWebWidget) -> None:
+async def test_streaming_protocol_emits_start_results_and_complete(
+    enabled_widget: NLWebWidget,
+) -> None:
     from nlweb_widget.protocol import protocol_ask_stream
 
-    await enabled_widget.index(ContentDocument(
-        id="sse-1", url="https://example.test/sse", title="SSE service",
-        content="SSE protocol streaming test", schema_object={"@type": "Service"},
-    ))
-    events = [event async for event in protocol_ask_stream(
-        enabled_widget, NLWebRequest(
-            query={"text": "SSE protocol"},
-            prefer={"streaming": True},
-            meta={"version": "0.55", "session_context": {"conversation_id": "sse-qa"}},
+    await enabled_widget.index(
+        ContentDocument(
+            id="sse-1",
+            url="https://example.test/sse",
+            title="SSE service",
+            content="SSE protocol streaming test",
+            schema_object={"@type": "Service"},
         )
-    )]
+    )
+    events = [
+        event
+        async for event in protocol_ask_stream(
+            enabled_widget,
+            NLWebRequest(
+                query={"text": "SSE protocol"},
+                prefer={"streaming": True},
+                meta={
+                    "version": "0.55",
+                    "session_context": {"conversation_id": "sse-qa"},
+                },
+            ),
+        )
+    ]
     assert events[0].startswith("event: start\n")
     assert any(event.startswith("event: result\n") for event in events)
     assert events[-1].startswith("event: complete\n")
@@ -228,6 +265,7 @@ async def test_streaming_protocol_emits_start_results_and_complete(enabled_widge
 
 async def test_streaming_yields_start_before_waiting_for_widget_answer() -> None:
     from types import SimpleNamespace
+
     from nlweb_widget.models import NLWebRequest
     from nlweb_widget.protocol import protocol_ask_stream
 
@@ -245,9 +283,12 @@ async def test_streaming_yields_start_before_waiting_for_widget_answer() -> None
             )
 
     widget = DelayedWidget()
-    stream = protocol_ask_stream(widget, NLWebRequest.model_validate({
-        "query": {"text": "test"}, "prefer": {"streaming": "true"}
-    }))
+    stream = protocol_ask_stream(
+        widget,
+        NLWebRequest.model_validate(
+            {"query": {"text": "test"}, "prefer": {"streaming": "true"}}
+        ),
+    )
     first = await anext(stream)
     assert first.startswith("event: start\n")
     assert widget.called is False

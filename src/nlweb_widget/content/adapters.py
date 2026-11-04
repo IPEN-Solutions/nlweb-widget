@@ -7,9 +7,9 @@ from collections.abc import Awaitable, Callable, Iterable
 from html.parser import HTMLParser
 from typing import Any, Protocol
 
-from ..errors import ContentIngestionError, OptionalDependencyError
+from ..errors import OptionalDependencyError
 from ..models import ContentDocument
-from .models import ContentSource, ContentSourceKind
+from .models import ContentSource
 
 
 class ContentAdapter(Protocol):
@@ -21,7 +21,9 @@ class SchemaJSONAdapter:
         raw = await _read_location(source.location)
         payload = json.loads(raw)
         objects = _objects(payload)
-        return [_schema_document(item, source, index) for index, item in enumerate(objects)]
+        return [
+            _schema_document(item, source, index) for index, item in enumerate(objects)
+        ]
 
 
 class RSSAtomAdapter:
@@ -73,7 +75,10 @@ class WebPageSchemaAdapter:
         parser = _SchemaParser()
         parser.feed(await _read_location(source.location))
         parser.close()
-        return [document.model_copy(update={"site": source.site}) for document in parser.documents]
+        return [
+            document.model_copy(update={"site": source.site})
+            for document in parser.documents
+        ]
 
 
 class CallableAdapter:
@@ -129,14 +134,24 @@ def _build_docling_converter() -> Any:
     from docling.document_converter import DocumentConverter
 
     device = os.getenv("DOCLING_DEVICE", "auto")
-    threads = max(1, int(os.getenv("DOCLING_NUM_THREADS", os.getenv("OMP_NUM_THREADS", "4"))))
-    safe_pdf = os.getenv("DOCLING_SAFE_PDF", "false").strip().lower() in {"1", "true", "yes", "on"}
+    threads = max(
+        1, int(os.getenv("DOCLING_NUM_THREADS", os.getenv("OMP_NUM_THREADS", "4")))
+    )
+    safe_pdf = os.getenv("DOCLING_SAFE_PDF", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
     if not safe_pdf:
         return DocumentConverter()
 
     from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import AcceleratorOptions, PdfPipelineOptions
+    from docling.datamodel.pipeline_options import (
+        AcceleratorOptions,
+        PdfPipelineOptions,
+    )
     from docling.document_converter import PdfFormatOption
 
     pdf_options = PdfPipelineOptions(
@@ -174,7 +189,9 @@ def _objects(payload: Any) -> list[dict[str, Any]]:
     return []
 
 
-def _schema_document(item: dict[str, Any], source: ContentSource, index: int) -> ContentDocument:
+def _schema_document(
+    item: dict[str, Any], source: ContentSource, index: int
+) -> ContentDocument:
     nested_schema = item.get("schema_object")
     schema = nested_schema if isinstance(nested_schema, dict) else item
     url = str(
@@ -191,7 +208,9 @@ def _schema_document(item: dict[str, Any], source: ContentSource, index: int) ->
         or schema.get("headline")
         or url
     )
-    content = str(item.get("content") or item.get("description") or _flatten_schema(schema))
+    content = str(
+        item.get("content") or item.get("description") or _flatten_schema(schema)
+    )
     return ContentDocument(
         id=str(item.get("id") or url),
         url=url,
@@ -208,9 +227,13 @@ def _coerce_document(item: Any, source: ContentSource) -> ContentDocument:
         return item.model_copy(update={"site": item.site or source.site})
     if not isinstance(item, dict):
         raise TypeError("Content adapters must return mappings or ContentDocument")
-    identifier = str(item.get("id") or item.get("url") or f"{source.name}:{hash(str(item))}")
+    identifier = str(
+        item.get("id") or item.get("url") or f"{source.name}:{hash(str(item))}"
+    )
     title = str(item.get("title") or item.get("name") or identifier)
-    content = str(item.get("content") or item.get("text") or item.get("description") or title)
+    content = str(
+        item.get("content") or item.get("text") or item.get("description") or title
+    )
     schema_object = item.get("schema_object")
     return ContentDocument(
         id=identifier,
@@ -222,9 +245,17 @@ def _coerce_document(item: Any, source: ContentSource) -> ContentDocument:
         metadata={
             key: value
             for key, value in item.items()
-            if key not in {
-                "id", "url", "title", "name", "content", "text",
-                "description", "schema_object", "site",
+            if key
+            not in {
+                "id",
+                "url",
+                "title",
+                "name",
+                "content",
+                "text",
+                "description",
+                "schema_object",
+                "site",
             }
         },
     )

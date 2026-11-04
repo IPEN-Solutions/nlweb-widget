@@ -9,7 +9,14 @@ def build_django_nlweb_urls(widget: Any) -> list[Any]:
     from django.urls import path
 
     from ..models import MCPRequest, NLWebRequest
-    from ..protocol import protocol_ask, protocol_ask_stream, protocol_discovery, protocol_health, protocol_mcp, streaming_requested
+    from ..protocol import (
+        protocol_ask,
+        protocol_ask_stream,
+        protocol_discovery,
+        protocol_health,
+        protocol_mcp,
+        streaming_requested,
+    )
 
     async def ask(request: Any) -> Any:
         payload = NLWebRequest.model_validate(json.loads(request.body or b"{}"))

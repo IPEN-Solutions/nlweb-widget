@@ -54,7 +54,11 @@ async def benchmark_retrieval(
         latencies.append((perf_counter() - started) * 1000)
         ranks.append(
             next(
-                (index + 1 for index, (_, identifier) in enumerate(scores) if identifier == expected),
+                (
+                    index + 1
+                    for index, (_, identifier) in enumerate(scores)
+                    if identifier == expected
+                ),
                 None,
             )
         )

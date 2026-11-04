@@ -42,10 +42,15 @@ class QdrantRetrievalStore:
                         distance=self._models.Distance.COSINE,
                     ),
                 )
+
         await asyncio.to_thread(create)
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
-        items = [documents] if isinstance(documents, ContentDocument) else list(documents)
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
+        items = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
         vectors = await self._embedder.embed([document.content for document in items])
         points = [
             self._models.PointStruct(
@@ -92,7 +97,11 @@ class QdrantRetrievalStore:
         query_filter = None
         if site:
             query_filter = self._models.Filter(
-                must=[self._models.FieldCondition(key="site", match=self._models.MatchValue(value=site))]
+                must=[
+                    self._models.FieldCondition(
+                        key="site", match=self._models.MatchValue(value=site)
+                    )
+                ]
             )
 
         def search_points() -> Any:

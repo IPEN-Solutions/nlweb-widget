@@ -1,8 +1,14 @@
-from typing import Any
+from typing import Annotated, Any
 
-from ..models import MCPRequest, NLWebRequest
-from ..protocol import protocol_ask, protocol_ask_stream, protocol_discovery, protocol_health, protocol_mcp, streaming_requested
-
+from ..models import NLWebRequest
+from ..protocol import (
+    protocol_ask,
+    protocol_ask_stream,
+    protocol_discovery,
+    protocol_health,
+    protocol_mcp,
+    streaming_requested,
+)
 
 _ASK_OPENAPI_SCHEMA = {
     "type": "object",
@@ -12,7 +18,10 @@ _ASK_OPENAPI_SCHEMA = {
             "type": "object",
             "required": ["text"],
             "properties": {
-                "text": {"type": "string", "description": "Natural-language query text."},
+                "text": {
+                    "type": "string",
+                    "description": "Natural-language query text.",
+                },
                 "site": {"type": "string", "nullable": True},
             },
             "additionalProperties": True,
@@ -69,13 +78,18 @@ def mount_fastapi_nlweb(app: Any, widget: Any, prefix: str = "") -> Any:
                 "content": {
                     "application/json": {
                         "schema": _ASK_OPENAPI_SCHEMA,
-                        "examples": {"nlwebAsk": {"summary": "NLWeb ask", "value": _ASK_OPENAPI_EXAMPLE}},
+                        "examples": {
+                            "nlwebAsk": {
+                                "summary": "NLWeb ask",
+                                "value": _ASK_OPENAPI_EXAMPLE,
+                            }
+                        },
                     }
                 }
             }
         },
     )
-    async def ask(payload: dict[str, Any] = Body(...)) -> Any:
+    async def ask(payload: Annotated[dict[str, Any], Body()]) -> Any:
         try:
             request_payload = NLWebRequest.model_validate(payload)
         except ValidationError as exc:
@@ -83,7 +97,9 @@ def mount_fastapi_nlweb(app: Any, widget: Any, prefix: str = "") -> Any:
             # payloads are HTTP 400 rather than FastAPI's default 422.
             from fastapi import HTTPException
 
-            raise HTTPException(status_code=400, detail="Invalid NLWeb request") from exc
+            raise HTTPException(
+                status_code=400, detail="Invalid NLWeb request"
+            ) from exc
         if streaming_requested(request_payload):
             return StreamingResponse(
                 protocol_ask_stream(widget, request_payload),
@@ -99,13 +115,18 @@ def mount_fastapi_nlweb(app: Any, widget: Any, prefix: str = "") -> Any:
                 "content": {
                     "application/json": {
                         "schema": _MCP_OPENAPI_SCHEMA,
-                        "examples": {"mcpAsk": {"summary": "MCP tools/call", "value": _MCP_OPENAPI_EXAMPLE}},
+                        "examples": {
+                            "mcpAsk": {
+                                "summary": "MCP tools/call",
+                                "value": _MCP_OPENAPI_EXAMPLE,
+                            }
+                        },
                     }
                 }
             }
         },
     )
-    async def mcp(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    async def mcp(payload: Annotated[dict[str, Any], Body()]) -> dict[str, Any]:
         # MCP invalid requests are protocol-level JSON-RPC errors and therefore
         # remain HTTP 200 responses from this binding.
         return await protocol_mcp(widget, payload)

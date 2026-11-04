@@ -31,17 +31,21 @@ class SentenceTransformersEmbeddingProvider:
             try:
                 from sentence_transformers import SentenceTransformer
             except ImportError as exc:
-                raise RuntimeError("Sentence Transformers support requires the 'embeddings' extra") from exc
+                raise RuntimeError(
+                    "Sentence Transformers support requires the 'embeddings' extra"
+                ) from exc
             kwargs = {"device": self.device} if self.device else {}
             self._model = SentenceTransformer(self.model_name, **kwargs)
         return self._model
 
     async def embed(self, texts: Sequence[str]) -> list[list[float]]:
         import asyncio
+
         return await asyncio.to_thread(self._encode, list(texts), False)
 
     async def embed_query(self, texts: Sequence[str]) -> list[list[float]]:
         import asyncio
+
         return await asyncio.to_thread(self._encode, list(texts), True)
 
     def _encode(self, texts: list[str], query: bool) -> list[list[float]]:

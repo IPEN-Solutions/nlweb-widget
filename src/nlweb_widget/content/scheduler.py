@@ -5,7 +5,9 @@ from collections.abc import Awaitable, Callable
 class ContentSyncScheduler:
     """Optional background scheduler for a content synchronization callback."""
 
-    def __init__(self, callback: Callable[[], Awaitable[object]], interval_seconds: float) -> None:
+    def __init__(
+        self, callback: Callable[[], Awaitable[object]], interval_seconds: float
+    ) -> None:
         self._callback = callback
         self._interval = interval_seconds
         self._task: asyncio.Task[None] | None = None

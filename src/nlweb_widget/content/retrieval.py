@@ -25,5 +25,7 @@ class RetrievalProvider(Protocol):
 async def embed_query(provider: EmbeddingProvider, query: str) -> list[float]:
     """Embed a search query, honoring providers that distinguish query/passage text."""
     method = getattr(provider, "embed_query", None)
-    vectors = await method([query]) if method is not None else await provider.embed([query])
+    vectors = (
+        await method([query]) if method is not None else await provider.embed([query])
+    )
     return vectors[0]

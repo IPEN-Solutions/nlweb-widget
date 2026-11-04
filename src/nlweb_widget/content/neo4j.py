@@ -49,11 +49,19 @@ class Neo4jKnowledgeGraphStore:
         for query in queries:
             await self._driver.execute_query(query, database_=self._database)
 
-    async def upsert(self, documents: Sequence[ContentDocument] | ContentDocument) -> int:
-        documents = [documents] if isinstance(documents, ContentDocument) else list(documents)
-        vectors = await self._embedder.embed([document.content for document in documents])
+    async def upsert(
+        self, documents: Sequence[ContentDocument] | ContentDocument
+    ) -> int:
+        documents = (
+            [documents] if isinstance(documents, ContentDocument) else list(documents)
+        )
+        vectors = await self._embedder.embed(
+            [document.content for document in documents]
+        )
         if len(vectors) != len(documents):
-            raise ValueError("embedding provider returned an incorrect number of vectors")
+            raise ValueError(
+                "embedding provider returned an incorrect number of vectors"
+            )
         for document, vector in zip(documents, vectors, strict=True):
             await self._driver.execute_query(
                 """MERGE (d:NLWebDocument {id: $id})
@@ -66,9 +74,7 @@ class Neo4jKnowledgeGraphStore:
                 content=document.content,
                 site=document.site or "default",
                 schema=json.dumps(document.schema_object, ensure_ascii=False),
-                metadata=json.dumps(
-                    document.metadata, ensure_ascii=False, default=str
-                ),
+                metadata=json.dumps(document.metadata, ensure_ascii=False, default=str),
                 embedding=[float(value) for value in vector],
                 database_=self._database,
             )
@@ -191,7 +197,11 @@ class Neo4jKnowledgeGraphStore:
 
     async def health(self) -> dict[str, object]:
         await self._driver.verify_connectivity()
-        return {"backend": "neo4j-knowledge-graph", "database": self._database, "status": "ok"}
+        return {
+            "backend": "neo4j-knowledge-graph",
+            "database": self._database,
+            "status": "ok",
+        }
 
     async def close(self) -> None:
         await self._driver.close()
@@ -206,9 +216,13 @@ def _record_to_match(record: Any) -> tuple[ContentDocument, float]:
             url=record["url"],
             title=record["title"],
             content=record["content"],
-            schema_object=json.loads(schema) if isinstance(schema, str) else schema or {},
+            schema_object=json.loads(schema)
+            if isinstance(schema, str)
+            else schema or {},
             site=record["site"],
-            metadata=json.loads(metadata) if isinstance(metadata, str) else metadata or {},
+            metadata=json.loads(metadata)
+            if isinstance(metadata, str)
+            else metadata or {},
         ),
         float(record["score"]),
     )
@@ -216,5 +230,7 @@ def _record_to_match(record: Any) -> tuple[ContentDocument, float]:
 
 def _safe_identifier(value: str) -> str:
     if not value or not value.replace("_", "").isalnum() or value[0].isdigit():
-        raise ValueError("identifier must be alphanumeric/underscore and not start with a digit")
+        raise ValueError(
+            "identifier must be alphanumeric/underscore and not start with a digit"
+        )
     return value
