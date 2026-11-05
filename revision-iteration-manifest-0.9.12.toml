@@ -1,0 +1,42 @@
+[manifest]
+kind = "revision-iteration-governance"
+schema_version = "2.0"
+iteration_version = "0.9.12"
+mutation_round = "release"
+candidate_name = "nlweb-widget-0.9.12"
+source_immutable_baseline = "nlweb-widget-0.9.11.zip"
+source_immutable_baseline_sha256 = "6d72ce59d65760f044c7625c7d1544348d912ec02c309c545f3768d73b24250e"
+status = "approved-immutable-release"
+immutable_after_start = true
+forward_only = true
+promotion_authorized = true
+approval_basis = "User-approved collective local QA results dated 2026-10-14; 58 passed, 6 optional-provider skips on Python 3.10.21."
+
+[shared_contract]
+path = "AUTHORITATIVE-DOMAIN-DATA-CONTRACT.md"
+sha256 = "27e485385db4383c96bcd140dbb06ccbd833b1c98ca03638598a3e986a379c84"
+priority = "official-protocol-first; widget-architecture-correctness; examples-conventions"
+conflict_policy = "report-explicitly; do-not-silently-approve-or-override"
+
+[scope]
+summary_result_items = true
+authoritative_type_projection = true
+grounding_serialization = true
+mcp_result_regression = true
+http_ask_sse_streaming = true
+streaming_event_contract = "SSE start/result/error/complete per NLWeb v0.55"
+streaming_string_boolean_parsing = true
+examples_package_modified = false
+
+[local_qa]
+python = "3.10.21"
+pytest = "8.4.2"
+test_explorer = "58 passed, 6 skipped"
+test_all = "58 passed, 6 skipped"
+conditional_optional_provider_tests = "provider-specific tests skipped where provider/service was not configured; Qdrant provider skip noted for local environment limits"
+code_review = "user-reported review accepted Widget behavior as expected"
+
+[promotion]
+status = "approved-immutable-baseline"
+approved_by = "user"
+release_version = "0.9.12"
