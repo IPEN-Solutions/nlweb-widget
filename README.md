@@ -1,16 +1,19 @@
 # nlweb-widget
 
-> **Approved immutable release:** `nlweb-widget 0.9.12`, promoted after consumer-reported Windows/Python 3.10.21 QA (58 passed, 6 skipped). The immutable 0.9.11 archive remains preserved as the previous baseline.
+
+> **Experimental / Proof of Concept Disclaimer:
+This repository contains an AI-assisted pilot implementation exploring integration of the NLWeb protocol with domain websites. It is experimental and intended for evaluation, not as a production-ready or officially endorsed implementation.
+NLWeb specifications and related tooling are still evolving; interfaces, behavior, and compatibility may change without notice. If you choose to use or adapt this software in production, evaluate it for your own requirements, test it thoroughly, and do so at your own risk. It is provided “as is,” without warranties or guarantees of fitness for a particular purpose.
 
 Framework-neutral Python widget for exposing authoritative domain data through the NLWeb protocol. The [official NLWeb Specification](https://nlweb.ai/docs/specification) is authoritative for wire-level behavior; example-specific ingestion conventions do not override it.
 
 ## Quick start
 
-```powershell
+``` powershell
 uv add nlweb-widget
 ```
 
-```python
+``` python
 from nlweb_widget import ContentDocument, NLWebWidget
 
 widget = NLWebWidget(domain="https://example.com")
@@ -30,7 +33,7 @@ The memory provider is dependency-free and remains the default. The widget is di
 
 ## HTTP integration
 
-```python
+``` python
 from nlweb_widget.integrations.fastapi_integration import mount_fastapi_nlweb
 
 mount_fastapi_nlweb(app, widget)
@@ -42,7 +45,7 @@ The same core works with the supported Flask, Django, Starlette, and standard-li
 
 `POST /ask` accepts the NLWeb sections `query`, `context`, `prefer`, and `meta`.
 
-```json
+``` json
 {
   "query": {"text": "Which AI services do you provide?", "site": "default"},
   "context": {},
@@ -59,7 +62,7 @@ For HTTP `/ask`, set `prefer.streaming` to `true` to request Server-Sent Events 
 
 Install only the capability you need:
 
-```powershell
+``` powershell
 uv sync --extra postgres
 uv sync --extra neo4j
 uv sync --extra haystack
@@ -72,7 +75,7 @@ Configure the provider with `NLWEB_RETRIEVAL_STORE` and its corresponding `NLWEB
 
 ### Qdrant Edge
 
-```text
+``` text
 NLWEB_RETRIEVAL_STORE=qdrant_edge
 NLWEB_QDRANT_EDGE_PATH=./.nlweb-qdrant-edge
 NLWEB_QDRANT_EDGE_DIMENSIONS=1536
@@ -84,8 +87,7 @@ Qdrant Edge is an embedded/local provider and deliberately has a separate lifecy
 
 Install the optional provider with `nlweb-widget[sqlite]`. The package pins `sqlite-vec==0.1.8` for this candidate because the upstream extension remains pre-v1.
 
-
-```text
+``` text
 NLWEB_RETRIEVAL_STORE=sqlite
 NLWEB_SQLITE_PATH=./.nlweb-sqlite/nlweb.db
 NLWEB_SQLITE_DIMENSIONS=384
@@ -99,7 +101,7 @@ keeps its database path and embedding dimensions configuration-driven.
 
 ### PostgreSQL + pgvector
 
-```text
+``` text
 NLWEB_RETRIEVAL_STORE=pgvector
 NLWEB_POSTGRES_DATABASE_URL=postgresql+asyncpg://nlweb:nlweb@localhost:5432/nlweb
 NLWEB_PGVECTOR_DIMENSIONS=1536
@@ -107,7 +109,7 @@ NLWEB_PGVECTOR_DIMENSIONS=1536
 
 ### Neo4j
 
-```text
+``` text
 NLWEB_RETRIEVAL_STORE=neo4j
 NLWEB_NEO4J_URI=neo4j://localhost:7687
 NLWEB_NEO4J_USERNAME=neo4j
@@ -131,7 +133,7 @@ The project-root `.env` is the minimum startup configuration source. `.env.examp
 
 ## Development and QA
 
-```powershell
+``` powershell
 uv sync --dev
 uv run pytest
 uv run ruff check .
@@ -145,8 +147,7 @@ Optional-provider integration tests skip when the provider is not explicitly con
 
 This release is governed by `revision-iteration-manifest-0.9.12.toml`. Historical candidate manifests are retained as provenance; the approved release record is authoritative for 0.9.12 status.
 
-See `CHANGELOG.md`, `MUTATION.md`, and `docs-provider-evaluations.md` for revision and provider details.
-
+See `CHANGELOG.md` for revision and provider details.
 
 ### QA corrective round
 
@@ -156,12 +157,10 @@ See `CHANGELOG.md`, `MUTATION.md`, and `docs-provider-evaluations.md` for revisi
 - Provider VS Code tasks and launch configurations use a consistent `Provider: <backend> — <action>` convention.
 - OpenRouter synthesis remains optional; retrieval query demos do not fail solely because optional answer synthesis is unavailable.
 
-
 ### Optional Docling CPU-safe PDF mode
 
 When the `documents` extra is enabled, `DOCLING_DEVICE`, `DOCLING_NUM_THREADS`, and `DOCLING_SAFE_PDF` control the optional document adapter. `DOCLING_SAFE_PDF=true` selects backend PDF text extraction without OCR/table/layout inference, avoiding unnecessary Torch/RT-DETR execution on constrained CPU hosts. The default remains `false` for backward-compatible Docling behavior; provider examples explicitly enable safe PDF mode for Windows local QA.
 
-
 ## Mutation review records
 
-See `AUTHORITATIVE-DOMAIN-DATA-CONTRACT.md`, `CONTRACT-TRACEABILITY.md`, and `CONFLICTS-AND-LIMITATIONS.md` for the shared contract, requirement-to-test mapping, and unresolved promotion blockers.
+See `AUTHORITATIVE-DOMAIN-DATA-CONTRACT.md`, `CONTRACT-TRACEABILITY.md` for the shared contract, requirement-to-test mapping.
