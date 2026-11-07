@@ -4,53 +4,121 @@ on:
   push:
     tags: ["v*.*.*"]
 
+# Default to read-only; grant write permissions only to jobs that need them.
 permissions:
-  contents: write
-  id-token: write
-  attestations: write
+  contents: read
 
 concurrency:
   group: pypi-release
   queue: max
 
 jobs:
-  release:
+  build:
+    name: Validate, test, and build
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Install release Python
+        run: uv python install 3.12
+
+      - name: Install release dependencies
+        run: uv sync --dev --all-extras --python 3.12
+
       - name: Verify tag matches project version
         shell: bash
         run: |
-          VERSION=$(python - <<'PY2'
+          VERSION=$(uv run --python 3.12 python - <<'PY'
           import tomllib
           with open("pyproject.toml", "rb") as f:
               print(tomllib.load(f)["project"]["version"])
-          PY2
+          PY
           )
           test "v${VERSION}" = "${GITHUB_REF_NAME}"
-      - name: Install release dependencies
-        run: uv sync --dev --all-extras
+
       - name: Test
-        run: uv run pytest
+        run: uv run --python 3.12 pytest
+
       - name: Lint
-        run: uv run ruff check .
+        run: uv run --python 3.12 ruff check .
+
       - name: Format check
-        run: uv run ruff format --check .
+        run: uv run --python 3.12 ruff format --check .
+
       - name: Build distributions
-        run: uv build
+        run: uv build --python 3.12
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: distributions
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  attest:
+    name: Attest build provenance
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: distributions
+          path: dist/
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-path: "dist/*"
+
+  github-release:
+    name: Create GitHub release
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: distributions
+          path: dist/
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           generate_release_notes: true
           files: "dist/*"
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: distributions
+          path: dist/
+
       - name: Publish to PyPI via trusted publishing
-        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 #release/v1 v1.14.3
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1 v1.14.3
