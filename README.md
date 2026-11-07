@@ -1,7 +1,7 @@
 # nlweb-widget
 
 
-> **Experimental / Proof of Concept Disclaimer:
+> WARNING:
 This repository contains an AI-assisted pilot implementation exploring integration of the NLWeb protocol with domain websites. It is experimental and intended for evaluation, not as a production-ready or officially endorsed implementation.
 NLWeb specifications and related tooling are still evolving; interfaces, behavior, and compatibility may change without notice. If you choose to use or adapt this software in production, evaluate it for your own requirements, test it thoroughly, and do so at your own risk. It is provided “as is,” without warranties or guarantees of fitness for a particular purpose.
 
@@ -142,6 +142,12 @@ uv build
 ```
 
 Optional-provider integration tests skip when the provider is not explicitly configured and fail when a configured provider cannot be exercised.
+
+## Documentation
+Please visit https://ipen-solutions.github.io/nlweb-widget-docs/ for complete documentation of the widget.
+
+## Usage Examples
+A comprehensive, detailed bundle of usage examples available for download and install at https://github.com/IPEN-Solutions/nlweb-widget-examples
 
 ## Release governance
 

@@ -1,0 +1,144 @@
+[manifest]
+kind = "canonical-build-manifest"
+schema_version = "2.0"
+package_version = "0.9.12"
+mutation_round = "release"
+mutation_candidate = "nlweb-widget-0.9.12"
+distribution_name = "nlweb-widget"
+import_namespace = "nlweb_widget"
+build_mode = "forward-only"
+genesis_baseline_immutable = true
+
+[governance]
+active_revision_manifest_sha256 = "a6417d4294d7e5d86ae21c7fa890d56d64bc60687625c80892e28379d248e3fb"
+active_revision_manifest = "revision-iteration-manifest-0.9.12.toml"
+active_revision_manifest_required = true
+active_revision_manifest_hash_required = true
+only_declared_iteration_changes_permitted = true
+unapproved_mutation_is_build_blocking = true
+release_approved = true
+
+[genesis]
+package_sha256 = "cf22dcb24707a22a2f34a7565b30da73b221bc359e42ad9f6f85a17293f59c02"
+docs_sha256 = "a2cfb30155bb3686ee0116266edeb4770e78fffd3c5718ae9389c9fa9ec53c0a"
+immutable = true
+
+[baseline_transition]
+success_action = "promote-successful-result-to-next-baseline"
+failure_action = "retain-current-baseline"
+rollback = "explicit-only"
+rollback_requires_hash_address = true
+
+[recovery]
+historical_capability_recovery = true
+protected_capability_inventory_required = true
+omission_point_recorded = true
+reference_implementation_internals_forbidden = true
+
+[providers]
+postgres_pgvector_optional = true
+neo4j_optional = true
+haystack_optional = true
+qdrant_optional = true
+qdrant_edge_optional = true
+sqlite_vec_optional = true
+sqlite_vec_pin = "0.1.8"
+docling_optional = true
+sentence_transformers_optional = true
+embedding_provider_injected = true
+provider_tests_conditional = true
+
+[protocol]
+ask = "/ask"
+mcp = "/mcp"
+discovery = "/.well-known/nlweb"
+health = "/health"
+ask_is_normative = true
+mcp_is_binding = true
+discovery_is_non_normative_metadata = true
+health_is_operational = true
+root_domain_default = true
+protocol_source_review_required = true
+
+[lifecycle]
+enabled_setting = "NLWEB_ENABLED"
+enabled_default = false
+projection_safeguard_only = true
+widget_owned_state = "effective_state"
+admin_lifecycle_extension_external = true
+
+[content_projection]
+source_registry_loading = true
+startup_projection = true
+relative_source_paths_resolved_against_registry = true
+
+[ecosystem]
+master_manifest = "nlweb-widget-ecosystem-manifest.toml"
+examples_repository = "nlweb-widget-examples"
+examples_are_published_to_pypi = false
+examples_dependencies_must_not_enter_runtime = true
+examples_are_independent_lifecycle = true
+
+[structure]
+framework_neutral_core = true
+integrations_are_thin_adapters = true
+adapter_pattern = "*_integration.py"
+
+[examples]
+repository = "nlweb-widget-examples"
+kept_out_of_widget_repository = true
+[tests]
+all_test_imports_must_be_satisfied_by_dev_group = true
+fresh_uv_sync_is_a_required_gate = true
+required = ["unit", "integration", "packaging"]
+python_minimum = "3.10"
+live_llm_required = false
+external_network_required = false
+examples_test_suite_is_external = true
+
+[docs]
+independent_pyproject_required = true
+static_docs_project_must_not_require_editable_build = true
+zensical_required = true
+role_based = true
+protocol_contract_required = true
+
+[vscode]
+package_test_tasks_required = true
+package_build_task_required = true
+example_tasks_forbidden = true
+aggregate_visibility_demo_task_forbidden = true
+
+[packaging]
+backend = "hatchling"
+uv_backed = true
+pyproject_required = true
+revision_manifest_shipped = true
+build_manifest_shipped = true
+sync_state_shipped = false
+
+[release]
+tag_pattern = "v{version}"
+tag_must_equal_project_version = true
+trusted_publishing = true
+provenance_attestation = true
+
+[forward_only]
+rules = [
+  "Never modify the genesis baseline.",
+  "Never introduce example-only dependencies into the published runtime graph.",
+  "Example applications and visibility infrastructure are governed by the examples repository.",
+  "Never apply undeclared revision changes.",
+  "A failed iteration cannot advance the baseline.",
+  "A successful iteration becomes the sole candidate next baseline.",
+  "Rollback is explicit, hash-addressed, and reviewable.",
+  "Build fails closed when governance metadata is inconsistent.",
+]
+
+[artifact_packaging]
+fail_closed = true
+forbidden_exact_names = [".env", ".nlweb-sync-state.json"]
+manifest = "nlweb-widget-ecosystem-manifest.toml"
+python_version_file = ".python-version"
+python_version = "3.10"
+forbidden_path_fragments = [".venv/", "__pycache__/", ".pytest_cache/", ".ruff_cache/", ".mypy_cache/", "*.pyc", "*.pyo", "dist/", "build/", ".env/", "node_modules/"]
